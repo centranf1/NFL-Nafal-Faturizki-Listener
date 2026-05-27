@@ -1,0 +1,52 @@
+[package]
+name = "nfl-firmware"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+embassy-executor = { workspace = true }
+embassy-nrf = { workspace = true }
+embassy-time = { workspace = true }
+embassy-sync = { workspace = true }
+nrf-softdevice = { workspace = true }
+
+# DSP & Math
+fixed = { workspace = true }
+heapless = { workspace = true }
+
+# Logging untuk embedded
+defmt = { workspace = true }
+defmt-rtt = { workspace = true }
+
+# Panic handler
+panic-probe = { workspace = true }
+
+# Device crate untuk nRF5340
+nrf5340-app = { version = "0.12", features = ["critical-section"] }
+
+# Async utilities
+futures = "0.3"
+
+# Additional utilities
+cortex-m = "0.7"
+cortex-m-rt = "0.7"
+
+# Phase 1: Audio DSP
+micromath = "0.2"
+num-traits = "0.2"
+num-derive = "0.4"
+
+[dev-dependencies]
+defmt-test = "0.3"
+
+[profile.dev]
+opt-level = "z"      # Size optimization
+debug = true
+
+[profile.release]
+opt-level = "z"      # Aggressive size optimization
+lto = true           # Link time optimization
+codegen-units = 1    # Better optimization
+strip = true

@@ -1,0 +1,33 @@
+[package]
+name = "nfl-mobile-engine"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+# DSP & Math untuk algoritma hearing test
+fixed = { workspace = true }
+
+# Serialization untuk data struktur
+serde = { version = "1.0", features = ["derive"] }
+bincode = "1.3"
+
+# Logging
+defmt = { workspace = true }
+
+# Error handling
+thiserror = "1.0"
+
+# Platform specific dependencies
+[target.'cfg(target_os = "android")'.dependencies]
+jni = "0.21"
+
+[target.'cfg(target_os = "ios")'.dependencies]
+objc = "0.2"
+
+[dev-dependencies]
+approx = "0.5"

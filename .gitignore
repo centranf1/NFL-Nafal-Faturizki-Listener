@@ -1,0 +1,42 @@
+# Rust
+/target/
+/Cargo.lock
+**/*.rs.bk
+*.pdb
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Build artifacts
+*.o
+*.a
+*.so
+*.dylib
+
+# Firmware specific
+*.bin
+*.hex
+*.elf
+probe-run.log
+rtt.log
+
+# Mobile
+mobile/flutter/build/
+mobile/flutter/.dart_tool/
+mobile/flutter/pubspec.lock
+
+# Hardware
+hardware/pcb/*.kicad_pcb-bak
+hardware/pcb/fp-info-cache
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.local
