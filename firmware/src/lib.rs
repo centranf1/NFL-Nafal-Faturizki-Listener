@@ -20,9 +20,7 @@ pub mod audio {
         pub mod noise_gate;
         pub mod filters;
         pub mod equalizer;
-        pub mod compressor {
-            // Placeholder for Phase 2
-        }
+        pub mod compressor;
     }
 }
 
