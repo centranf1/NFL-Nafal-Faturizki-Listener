@@ -24,7 +24,7 @@ defmt-rtt = { workspace = true }
 panic-probe = { workspace = true }
 
 # Device crate untuk nRF5340
-nrf5340-app = { version = "0.12", features = ["critical-section"] }
+nrf5340-app = { version = "0.12", optional = true, features = ["critical-section"] }
 
 # Async utilities
 futures = "0.3"
@@ -54,3 +54,5 @@ strip = true
 [features]
 # Enable host/std build for running tests and host simulations
 host = []
+# Device-specific feature (enable when building for target hardware)
+device = ["nrf5340-app"]
