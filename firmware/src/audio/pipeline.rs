@@ -16,6 +16,8 @@ use crate::audio::dsp::filters::{BiquadCoeff, BiquadState};
 use crate::audio::dsp::noise_gate::{NoiseGate, NoiseGateConfig};
 use crate::audio::dsp::equalizer::{Equalizer, EqProfile};
 use defmt::*;
+#[cfg(feature = "host")]
+use std::time;
 
 pub const PIPELINE_FRAME_SIZE: usize = 256;
 
@@ -167,7 +169,10 @@ impl AudioPipeline {
     /// Total: ~37ms (acceptable for Phase 1 testing)
     pub async fn process_frame(&mut self) -> Result<(), PipelineError> {
         // Record start time for performance measurement
+        #[cfg(not(feature = "host"))]
         let _start_time = embassy_time::Instant::now();
+        #[cfg(feature = "host")]
+        let _start_time = std::time::Instant::now();
 
         // 1. Read input frame from capture buffer
         let input_frame = match self.capture.read_frame() {
@@ -230,8 +235,16 @@ impl AudioPipeline {
         self.frames_processed += 1;
 
         // Measure DSP time
-        let elapsed = _start_time.elapsed().as_micros() as u32;
-        self.dsp_time_us = elapsed;
+        #[cfg(not(feature = "host"))]
+        {
+            let elapsed = _start_time.elapsed().as_micros() as u32;
+            self.dsp_time_us = elapsed;
+        }
+        #[cfg(feature = "host")]
+        {
+            let elapsed = _start_time.elapsed().as_micros() as u32;
+            self.dsp_time_us = elapsed;
+        }
 
         Ok(())
     }
@@ -247,7 +260,10 @@ impl AudioPipeline {
             }
 
             // Allow other tasks to run
+            #[cfg(not(feature = "host"))]
             embassy_time::Timer::after_micros(1).await;
+            #[cfg(feature = "host")]
+            std::thread::sleep(std::time::Duration::from_micros(1));
         }
     }
 

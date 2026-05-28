@@ -90,7 +90,10 @@ async fn main(spawner: Spawner) {
 
     // Keep main loop alive
     loop {
+        #[cfg(not(feature = "host"))]
         embassy_time::Timer::after_millis(10000).await;
+        #[cfg(feature = "host")]
+        std::thread::sleep(std::time::Duration::from_millis(10000));
 
         // Status update every 10 seconds
         info!("🔄 Pipeline heartbeat - still running...");
@@ -132,7 +135,10 @@ async fn audio_processing_task(mut pipeline: AudioPipeline) {
         }
 
         // Yield to other tasks
+        #[cfg(not(feature = "host"))]
         embassy_time::Timer::after_micros(10).await;
+        #[cfg(feature = "host")]
+        std::thread::sleep(std::time::Duration::from_micros(10));
     }
 }
 

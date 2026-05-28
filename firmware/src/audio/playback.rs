@@ -9,7 +9,7 @@
 /// - GPIO control for amplifier enable pin (P0.28)
 /// - Volume control via digital gain before DMA
 
-use heapless::Vec;
+use heapless::{Vec, Deque};
 use defmt::*;
 use crate::hal::i2s::{I2sDriver, I2sConfig, SampleRate, Channels, I2sMode, I2sError};
 
@@ -27,8 +27,7 @@ pub const MAX_VOLUME: f32 = 20.0; // dBFS
 /// - Enable pin: P0.28 (GPIO, active high)
 pub struct AudioPlayback {
     i2s: I2sDriver,
-    buffer: Vec<i16, PLAYBACK_BUFFER_SIZE>,
-    write_pos: usize,
+    buffer: Deque<i16, PLAYBACK_BUFFER_SIZE>,
     volume_gain_db: f32,
     enabled: bool,
     
@@ -58,8 +57,7 @@ impl AudioPlayback {
 
         Ok(Self {
             i2s,
-            buffer: Vec::new(),
-            write_pos: 0,
+            buffer: Deque::new(),
             volume_gain_db: 0.0,
             enabled: false,
             frames_played: 0,
@@ -100,7 +98,7 @@ impl AudioPlayback {
     /// 
     /// The frame will be applied with volume gain before transmission
     pub fn write_frame(&mut self, frame: &[i16; FRAME_SIZE]) -> Result<(), PlaybackError> {
-        if self.write_pos + FRAME_SIZE > PLAYBACK_BUFFER_SIZE {
+        if self.buffer.len() + FRAME_SIZE > PLAYBACK_BUFFER_SIZE {
             self.buffer_underruns += 1;
             return Err(PlaybackError::BufferFull);
         }
@@ -112,13 +110,12 @@ impl AudioPlayback {
             let scaled = (sample as f32 * gain_linear) as i16;
             let clamped = scaled.clamp(-32768, 32767);
 
-            if self.buffer.push(clamped).is_err() {
+            if self.buffer.push_back(clamped).is_err() {
                 self.buffer_underruns += 1;
                 return Err(PlaybackError::BufferFull);
             }
         }
 
-        self.write_pos += FRAME_SIZE;
         self.frames_played += 1;
 
         Ok(())
@@ -137,7 +134,7 @@ impl AudioPlayback {
             let scaled = (sample as f32 * gain_linear) as i16;
             let clamped = scaled.clamp(-32768, 32767);
 
-            self.buffer.push(clamped)
+            self.buffer.push_back(clamped)
                 .map_err(|_| PlaybackError::BufferFull)?;
         }
 
@@ -207,7 +204,7 @@ impl AudioPlayback {
 
         let mut frame = [0i16; FRAME_SIZE];
         for i in 0..FRAME_SIZE {
-            frame[i] = self.buffer.remove(0);
+            frame[i] = self.buffer.pop_front().unwrap_or(0);
         }
 
         Some(frame)
@@ -216,7 +213,6 @@ impl AudioPlayback {
     /// Clear playback buffer
     pub fn reset(&mut self) {
         self.buffer.clear();
-        self.write_pos = 0;
     }
 
     /// Get I2S status

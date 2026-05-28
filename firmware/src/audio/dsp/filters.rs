@@ -29,12 +29,12 @@ impl BiquadCoeff {
     /// - cutoff_hz: Cutoff frequency in Hz
     /// - sample_rate: Sample rate in Hz
     pub fn butterworth_highpass(cutoff_hz: f32, sample_rate: f32) -> Self {
-        let w0 = 2.0 * std::f32::consts::PI * cutoff_hz / sample_rate;
+        let w0 = 2.0 * core::f32::consts::PI * cutoff_hz / sample_rate;
         let sin_w0 = w0.sin();
         let cos_w0 = w0.cos();
 
         // Butterworth Q = 0.707 (maximum flatness)
-        let q = 1.0 / std::f32::consts::SQRT_2;
+        let q = 1.0 / core::f32::consts::SQRT_2;
         let alpha = sin_w0 / (2.0 * q);
 
         let b0 = (1.0 + cos_w0) / 2.0;
@@ -86,10 +86,10 @@ impl BiquadCoeff {
 
     /// Create low-pass filter
     pub fn lowpass(cutoff_hz: f32, sample_rate: f32) -> Self {
-        let w0 = 2.0 * std::f32::consts::PI * cutoff_hz / sample_rate;
+        let w0 = 2.0 * core::f32::consts::PI * cutoff_hz / sample_rate;
         let sin_w0 = w0.sin();
         let cos_w0 = w0.cos();
-        let q = 1.0 / std::f32::consts::SQRT_2;
+        let q = 1.0 / core::f32::consts::SQRT_2;
         let alpha = sin_w0 / (2.0 * q);
 
         let b0 = (1.0 - cos_w0) / 2.0;

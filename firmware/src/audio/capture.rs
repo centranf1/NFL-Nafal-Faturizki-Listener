@@ -8,7 +8,7 @@
 /// - Frame-based processing (256 samples = 16ms @ 16kHz)
 /// - Double buffering to minimize latency
 
-use heapless::Vec;
+use heapless::{Vec, Deque};
 use defmt::*;
 use crate::hal::i2s::{I2sDriver, I2sConfig, SampleRate, Channels, I2sMode, I2sError};
 
@@ -24,8 +24,7 @@ pub const FRAME_SIZE: usize = 256; // 16ms @ 16kHz
 /// - Sample rate: 16kHz (Phase 1), expandable to 48kHz
 pub struct AudioCapture {
     i2s: I2sDriver,
-    buffer: Vec<i16, CAPTURE_BUFFER_SIZE>,
-    read_pos: usize,
+    buffer: Deque<i16, CAPTURE_BUFFER_SIZE>,
     
     // Statistics
     frames_captured: u32,
@@ -52,8 +51,7 @@ impl AudioCapture {
 
         Ok(Self {
             i2s,
-            buffer: Vec::new(),
-            read_pos: 0,
+            buffer: Deque::new(),
             frames_captured: 0,
             buffer_overflows: 0,
         })
@@ -93,15 +91,14 @@ impl AudioCapture {
     /// Returns: Reference to frame if available
     pub fn read_frame(&mut self) -> Option<[i16; FRAME_SIZE]> {
         // Check if we have a complete frame
-        if self.read_pos + FRAME_SIZE <= self.buffer.len() {
+        if self.buffer.len() >= FRAME_SIZE {
             let mut frame = [0i16; FRAME_SIZE];
             
-            // Copy frame data
+            // Copy and pop frame data
             for i in 0..FRAME_SIZE {
-                frame[i] = self.buffer[self.read_pos + i];
+                frame[i] = self.buffer.pop_front().unwrap_or(0);
             }
             
-            self.read_pos += FRAME_SIZE;
             self.frames_captured += 1;
             
             Some(frame)
@@ -117,16 +114,17 @@ impl AudioCapture {
         }
 
         let total_samples = count * FRAME_SIZE;
-        if self.read_pos + total_samples > self.buffer.len() {
+        if self.buffer.len() < total_samples {
             return None;
         }
 
         let mut data = Vec::new();
-        for i in 0..total_samples {
-            data.push(self.buffer[self.read_pos + i]).ok()?;
+        for _ in 0..total_samples {
+            if let Some(sample) = self.buffer.pop_front() {
+                data.push(sample).ok()?;
+            }
         }
 
-        self.read_pos += total_samples;
         self.frames_captured += count as u32;
 
         Some(data)
@@ -147,7 +145,7 @@ impl AudioCapture {
         let rms = ((sum_sq as f32) / (self.buffer.len() as f32)).sqrt();
 
         // Convert to dBFS (Full Scale = 32768)
-        20.0 * (rms / 32768.0).log10()
+        20.0 * (rms / 32768.0).max(1e-9).log10()
     }
 
     /// Get peak level (maximum absolute value in dBFS)
@@ -166,7 +164,7 @@ impl AudioCapture {
         if max_abs == 0 {
             -120.0
         } else {
-            20.0 * (max_abs as f32 / 32768.0).log10()
+            20.0 * (max_abs as f32 / 32768.0).max(1e-9).log10()
         }
     }
 
@@ -190,7 +188,6 @@ impl AudioCapture {
     /// Clear capture buffer
     pub fn reset(&mut self) {
         self.buffer.clear();
-        self.read_pos = 0;
     }
 
     /// Get I2S status
@@ -219,10 +216,10 @@ pub fn measure_frame_level(frame: &[i16]) -> FrameLevel {
 
     let sum_sq: i64 = frame.iter().map(|&s| (s as i64) * (s as i64)).sum();
     let rms = ((sum_sq as f32) / (frame.len() as f32)).sqrt();
-    let rms_db = 20.0 * (rms / 32768.0).log10();
+    let rms_db = 20.0 * (rms / 32768.0).max(1e-9).log10();
 
     let peak_abs = frame.iter().map(|&s| s.abs() as i32).max().unwrap_or(0);
-    let peak_db = 20.0 * (peak_abs as f32 / 32768.0).log10();
+    let peak_db = 20.0 * (peak_abs as f32 / 32768.0).max(1e-9).log10();
 
     // Crest factor = Peak / RMS (in linear scale)
     let crest_factor = if rms > 0.0 {
@@ -278,7 +275,7 @@ mod tests {
 
         for (i, sample) in frame.iter_mut().enumerate() {
             let freq = 1000.0 / 16000.0; // 1kHz @ 16kHz
-            let phase = 2.0 * std::f32::consts::PI * freq * (i as f32);
+            let phase = 2.0 * core::f32::consts::PI * freq * (i as f32);
             *sample = (amplitude as f32 * phase.sin()) as i16;
         }
 

@@ -79,7 +79,7 @@ impl NoiseGate {
     pub fn process(&mut self, sample: i16) -> i16 {
         // Measure input level
         let sample_f = sample as f32 / 32768.0;
-        let level_dbfs = 20.0 * sample_f.abs().log10();
+        let level_dbfs = 20.0 * sample_f.abs().max(1e-9).log10();
 
         // Determine target envelope (0.0 = closed, 1.0 = open)
         let target_envelope = if level_dbfs > self.config.threshold_dbfs {

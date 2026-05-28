@@ -331,7 +331,7 @@ pub fn db_to_linear(db: f32) -> f32 {
 
 /// Helper: Convert linear to dB
 pub fn linear_to_db(linear: f32) -> f32 {
-    20.0 * linear.log10()
+    20.0 * linear.max(1e-9).log10()
 }
 
 /// DMA Transfer Configuration Helper

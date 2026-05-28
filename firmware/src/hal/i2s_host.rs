@@ -130,7 +130,7 @@ impl I2sDriver {
                 let frame_interval = Duration::from_micros((FRAME_SIZE as u64 * 1_000_000) / sample_rate as u64);
                 let mut phase: f32 = 0.0;
                 let freq = 1000.0; // 1kHz test tone
-                let two_pi = std::f32::consts::PI * 2.0;
+                let two_pi = core::f32::consts::PI * 2.0;
 
                 while running.load(Ordering::SeqCst) {
                     // Generate frame
