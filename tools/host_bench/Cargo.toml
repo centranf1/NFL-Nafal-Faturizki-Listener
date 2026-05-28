@@ -1,0 +1,13 @@
+[package]
+name = "nfl-firmware-host-bench"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+nfl-firmware = { path = "../../firmware", package = "nfl-firmware", features = ["host"] }
+
+[dev-dependencies]
+criterion = "0.5"
+
+[profile.release]
+opt-level = 3
