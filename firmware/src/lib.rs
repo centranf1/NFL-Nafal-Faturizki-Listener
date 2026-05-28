@@ -9,7 +9,7 @@
 /// - power/     → Power management (Phase 2)
 /// - hal/       → Hardware abstraction layer
 
-#![no_std]
+#![cfg_attr(not(feature = "host"), no_std)]
 
 pub mod audio {
     pub mod capture;
@@ -66,7 +66,14 @@ pub mod power {
 }
 
 pub mod hal {
+    #[cfg(not(feature = "host"))]
     pub mod i2s;
+
+    #[cfg(feature = "host")]
+    pub mod i2s_host;
+
+    #[cfg(feature = "host")]
+    pub use i2s_host as i2s;
     pub mod spi {
         // Placeholder for Phase 2+: SPI for flash
     }

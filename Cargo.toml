@@ -2,6 +2,7 @@
 members = [
     "firmware",
     "mobile/rust",
+    "tools/host_sim",
 ]
 
 resolver = "2"

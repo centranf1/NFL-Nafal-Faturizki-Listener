@@ -128,6 +128,15 @@ impl AudioPipeline {
         self.playback.set_volume(gain_db);
     }
 
+    /// Inject a captured frame directly into the pipeline (host/testing helper)
+    ///
+    /// This method is intended for host-side simulations and unit tests to
+    /// push a frame into the internal capture buffer without requiring real
+    /// I2S/DMA hardware.
+    pub fn inject_frame(&mut self, frame: &[i16; FRAME_SIZE]) -> Result<(), &'static str> {
+        self.capture.push_dma_data(frame).map_err(|_| "inject_failed")
+    }
+
     /// Get pipeline statistics
     pub fn stats(&self) -> PipelineStats {
         PipelineStats {
@@ -253,6 +262,14 @@ impl AudioPipeline {
         info!("  Gate envelope: {:.2}", stats.gate_envelope);
         info!("  Buffer level: {:.1}%", stats.playback_buffer_level * 100.0);
         info!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    }
+}
+
+impl AudioPipeline {
+    /// Drain one frame from the playback buffer (host/testing helper)
+    /// Returns `Some(frame)` if a frame was available and removed from the buffer.
+    pub fn drain_playback_frame(&mut self) -> Option<[i16; FRAME_SIZE]> {
+        self.playback.get_dma_frame()
     }
 }
 

@@ -1,0 +1,17 @@
+[package]
+name = "nfl-firmware-host-sim"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# Use the firmware crate with host feature enabled
+nfl-firmware = { path = "../../firmware", package = "nfl-firmware", features = ["host"] }
+
+futures = "0.3"
+hound = "3.4"
+
+[profile.dev]
+opt-level = 0
+
+[profile.release]
+opt-level = 3

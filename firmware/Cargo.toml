@@ -50,3 +50,7 @@ opt-level = "z"      # Aggressive size optimization
 lto = true           # Link time optimization
 codegen-units = 1    # Better optimization
 strip = true
+
+[features]
+# Enable host/std build for running tests and host simulations
+host = []
