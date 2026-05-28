@@ -178,7 +178,7 @@ impl AudioCapture {
 
         // Add to buffer
         for &sample in samples {
-            self.buffer.push(sample)
+            self.buffer.push_back(sample)
                 .map_err(|_| I2sError::BufferOverflow)?;
         }
 

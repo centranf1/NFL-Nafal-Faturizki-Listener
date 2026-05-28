@@ -9,7 +9,7 @@
 /// - GPIO control for amplifier enable pin (P0.28)
 /// - Volume control via digital gain before DMA
 
-use heapless::{Vec, Deque};
+use heapless::Deque;
 use defmt::*;
 use crate::hal::i2s::{I2sDriver, I2sConfig, SampleRate, Channels, I2sMode, I2sError};
 
