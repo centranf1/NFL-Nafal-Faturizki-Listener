@@ -1,0 +1,35 @@
+name: Host Simulation CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build_and_test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+      - name: Install dependencies
+        run: cargo --version
+      - name: Build firmware (host)
+        run: cargo build -p nfl-firmware --features host --verbose
+      - name: Run firmware tests (host)
+        run: cargo test -p nfl-firmware --features host --verbose
+      - name: Build host simulator
+        run: cargo build --manifest-path tools/host_sim/Cargo.toml --verbose
+      - name: Run host simulator (short)
+        run: |
+          cargo run --manifest-path tools/host_sim/Cargo.toml -- --duration 1 --output ci_out.wav
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: host-sim-output
+          path: ci_out.wav
