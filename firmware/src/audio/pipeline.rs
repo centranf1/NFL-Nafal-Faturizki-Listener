@@ -183,7 +183,7 @@ impl AudioPipeline {
         // Measure input level
         let input_level = measure_frame_level(&input_frame);
         if self.frames_processed % 100 == 0 {
-            debug!("Input: RMS={:.1}dB Peak={:.1}dB", 
+            debug!("Input: RMS={}dB Peak={}dB", 
                 input_level.rms_db, input_level.peak_db);
         }
 
@@ -241,8 +241,8 @@ impl AudioPipeline {
         self.start().await.map_err(|_| PipelineError::StartupFailed)?;
 
         loop {
-            if let Err(e) = self.process_frame().await {
-                warn!("Pipeline error: {:?}", e);
+            if let Err(_e) = self.process_frame().await {
+                warn!("Pipeline error");
                 // Continue despite errors
             }
 
@@ -259,8 +259,8 @@ impl AudioPipeline {
         info!("  Frames: {}", stats.frames_processed);
         info!("  Underruns: {}", stats.underruns);
         info!("  Overruns: {}", stats.overruns);
-        info!("  Gate envelope: {:.2}", stats.gate_envelope);
-        info!("  Buffer level: {:.1}%", stats.playback_buffer_level * 100.0);
+        info!("  Gate envelope: {}", stats.gate_envelope);
+        info!("  Buffer level: {}%", stats.playback_buffer_level * 100.0);
         info!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     }
 }

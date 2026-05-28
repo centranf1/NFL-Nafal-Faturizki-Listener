@@ -7,8 +7,8 @@
 /// - Audio pipeline: I2S capture → DSP → I2S playback
 /// - Target latency: < 15ms end-to-end
 
-#![no_std]
-#![no_main]
+#[cfg_attr(not(feature = "host"), no_std)]
+#[cfg_attr(not(feature = "host"), no_main)]
 
 use nfl_firmware::audio::pipeline::{AudioPipeline, PipelineConfig};
 use nfl_firmware::audio::dsp::equalizer::EqProfile;
@@ -16,6 +16,7 @@ use defmt::{info, warn, error};
 use embassy_executor::Spawner;
 use panic_probe as _;
 
+#[cfg(not(feature = "host"))]
 #[embassy_executor::main]
 async fn main(spawner: Spawner) {
     info!("🦻 NFL Firmware v0.1.0 - Phase 1: Audio DSP Pipeline");
@@ -30,8 +31,8 @@ async fn main(spawner: Spawner) {
             info!("✅ Audio pipeline created successfully");
             p
         }
-        Err(e) => {
-            error!("❌ Failed to create audio pipeline: {}", e);
+        Err(_e) => {
+            error!("❌ Failed to create audio pipeline");
             return;
         }
     };
@@ -65,8 +66,8 @@ async fn main(spawner: Spawner) {
             info!("   • Sample rate: 16 kHz");
             info!("   • Frame size: 256 samples (16ms)");
         }
-        Err(e) => {
-            error!("❌ Failed to start audio I/O: {}", e);
+        Err(_e) => {
+            error!("❌ Failed to start audio I/O");
             return;
         }
     }
@@ -96,6 +97,12 @@ async fn main(spawner: Spawner) {
     }
 }
 
+#[cfg(feature = "host")]
+fn main() {
+    println!("Host build: embedded main is disabled. Use tools/host_sim for simulation.");
+}
+
+#[cfg(not(feature = "host"))]
 #[embassy_executor::task]
 async fn audio_processing_task(mut pipeline: AudioPipeline) {
     info!("🚀 Audio processing task started");
@@ -113,9 +120,9 @@ async fn audio_processing_task(mut pipeline: AudioPipeline) {
                     pipeline.print_status();
                 }
             }
-            Err(e) => {
+            Err(_e) => {
                 error_count += 1;
-                warn!("Audio processing error: {:?} (count: {})", e, error_count);
+                warn!("Audio processing error (count: {})", error_count);
 
                 if error_count > 10 {
                     error!("❌ Too many errors, stopping audio pipeline");

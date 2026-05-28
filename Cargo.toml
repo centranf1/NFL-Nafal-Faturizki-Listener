@@ -20,9 +20,7 @@ embassy-executor = { version = "0.5", features = ["arch-cortex-m"] }
 embassy-time = { version = "0.3" }
 embassy-sync = { version = "0.5" }
 
-# HAL untuk nRF5340
-embassy-nrf = { version = "0.1", features = ["nrf5340-app-s"] }
-nrf-softdevice = { version = "0.1", features = ["ble-peripheral"] }
+# HAL untuk nRF5340 (moved to firmware/Cargo.toml as optional)
 
 # DSP & Math
 fixed = "1.23"

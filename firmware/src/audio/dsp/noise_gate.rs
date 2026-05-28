@@ -58,7 +58,7 @@ impl NoiseGate {
         info!("   Threshold: {} dBFS", config.threshold_dbfs);
         info!("   Attack: {} ms", config.attack_ms);
         info!("   Release: {} ms", config.release_ms);
-        info!("   Range: {:.1}%", config.range * 100.0);
+        info!("   Range: {}%", config.range * 100.0);
 
         Self {
             config,

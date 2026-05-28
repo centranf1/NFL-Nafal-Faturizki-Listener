@@ -225,22 +225,26 @@ impl I2sDriver {
         if data.len() != FRAME_SIZE {
             return Err(I2sError::BufferOverflow);
         }
-        if self.rx_buffer.len() + data.len() > DMA_BUFFER_SIZE {
-            return Err(I2sError::BufferOverflow);
+        if let Ok(mut buf) = self.rx_buffer.lock() {
+            if buf.len() + data.len() > DMA_BUFFER_SIZE {
+                return Err(I2sError::BufferOverflow);
+            }
+            for &s in data {
+                buf.push_back(s);
+            }
+            self.last_processed = buf.len() as u32;
         }
-        for &s in data {
-            self.rx_buffer.push_back(s);
-        }
-        self.last_processed = self.rx_buffer.len() as u32;
         Ok(())
     }
 
     pub fn tx_dma_request(&mut self, output: &mut [i16; FRAME_SIZE]) -> Result<(), I2sError> {
-        if self.tx_buffer.len() < FRAME_SIZE {
-            return Err(I2sError::BufferUnderflow);
-        }
-        for i in 0..FRAME_SIZE {
-            output[i] = self.tx_buffer.pop_front().unwrap_or(0);
+        if let Ok(mut buf) = self.tx_buffer.lock() {
+            if buf.len() < FRAME_SIZE {
+                return Err(I2sError::BufferUnderflow);
+            }
+            for i in 0..FRAME_SIZE {
+                output[i] = buf.pop_front().unwrap_or(0);
+            }
         }
         Ok(())
     }
@@ -250,32 +254,35 @@ impl I2sDriver {
             capturing: self.dma_active,
             playing: self.dma_active,
             sample_rate: self.config.sample_rate.value(),
-            rx_buffer_fill: self.rx_buffer.len(),
-            tx_buffer_fill: self.tx_buffer.len(),
+            rx_buffer_fill: self.rx_buffer.lock().map(|b| b.len()).unwrap_or(0),
+            tx_buffer_fill: self.tx_buffer.lock().map(|b| b.len()).unwrap_or(0),
         }
     }
 
     pub fn rx_available(&self) -> usize {
-        self.rx_buffer.len()
+        self.rx_buffer.lock().map(|b| b.len()).unwrap_or(0)
     }
 
     pub fn tx_available(&self) -> usize {
-        DMA_BUFFER_SIZE - self.tx_buffer.len()
+        DMA_BUFFER_SIZE - self.tx_buffer.lock().map(|b| b.len()).unwrap_or(0)
     }
 
     pub fn write_tx(&mut self, sample: i16) -> Result<(), I2sError> {
-        if self.tx_buffer.len() >= DMA_BUFFER_SIZE {
-            return Err(I2sError::BufferOverflow);
+        if let Ok(mut buf) = self.tx_buffer.lock() {
+            if buf.len() >= DMA_BUFFER_SIZE {
+                return Err(I2sError::BufferOverflow);
+            }
+            buf.push_back(sample);
         }
-        self.tx_buffer.push_back(sample);
         Ok(())
     }
 
     pub fn read_rx(&mut self) -> Result<i16, I2sError> {
-        if let Some(s) = self.rx_buffer.pop_front() {
-            Ok(s)
-        } else {
-            Err(I2sError::BufferUnderflow)
+        if let Ok(mut buf) = self.rx_buffer.lock() {
+            if let Some(s) = buf.pop_front() {
+                return Ok(s);
+            }
         }
+        Err(I2sError::BufferUnderflow)
     }
 }

@@ -9,7 +9,7 @@
 /// - power/     → Power management (Phase 2)
 /// - hal/       → Hardware abstraction layer
 
-#![cfg_attr(not(feature = "host"), no_std)]
+#[cfg_attr(not(feature = "host"), no_std)]
 
 pub mod audio {
     pub mod capture;

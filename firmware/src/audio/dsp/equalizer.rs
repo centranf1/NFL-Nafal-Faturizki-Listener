@@ -195,7 +195,7 @@ impl Equalizer {
         info!("Frequency Response:");
         for &freq in test_freqs.iter() {
             let response = self.frequency_response(freq);
-            info!("  {}Hz: {:.1} dB", freq, response);
+            info!("  {}Hz: {} dB", freq, response);
         }
     }
 }

@@ -247,26 +247,7 @@ pub struct FrameLevel {
 }
 
 /// Helper: Measure input level from a frame
-pub fn measure_frame_level(frame: &[i16]) -> FrameLevel {
-    let sum_sq: i64 = frame.iter().map(|&s| (s as i64) * (s as i64)).sum();
-    let rms = ((sum_sq as f32) / (frame.len() as f32)).sqrt();
-    let rms_db = 20.0 * (rms / 32768.0).log10();
-
-    let peak_abs = frame.iter().map(|&s| s.abs() as i32).max().unwrap_or(0);
-    let peak_db = 20.0 * (peak_abs as f32 / 32768.0).log10();
-
-    FrameLevel {
-        rms_db,
-        peak_db,
-        peak_linear: peak_abs as i16,
-    }
-}
-
-pub struct FrameLevel {
-    pub rms_db: f32,
-    pub peak_db: f32,
-    pub peak_linear: i16,
-}
+// Duplicate helper and struct removed; single definitions remain above.
 
 #[cfg(test)]
 mod tests {
